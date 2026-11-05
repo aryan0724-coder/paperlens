@@ -66,7 +66,9 @@ export default defineManifest({
     },
   ],
   permissions: ['sidePanel', 'storage', 'activeTab', 'scripting', 'offscreen', 'tabs'],
-  host_permissions: PAPER_HOSTS,
+  // extensionpay.com is included so the extension can call ExtPay's API without
+  // tripping CORS (host_permissions makes Chrome bypass CORS for these hosts).
+  host_permissions: [...PAPER_HOSTS, 'https://extensionpay.com/*'],
   web_accessible_resources: [
     {
       resources: ['src/offscreen/offscreen.html', 'assets/*'],
