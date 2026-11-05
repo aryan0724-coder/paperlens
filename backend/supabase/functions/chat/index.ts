@@ -10,7 +10,10 @@ STRUCTURED SUMMARY (if provided) to answer the user's question. Prefer facts gro
 may build on the summary for context and follow-up questions. Be concise and precise, and cite section names or
 quotes when useful. If the specific detail asked for isn't in the provided text (for example only the abstract was
 extracted), say what is known from the abstract/summary and suggest opening the full PDF for more depth rather than
-refusing outright.`;
+refusing outright.
+
+Formatting: you are rendered in a narrow side panel (~360px). Use short paragraphs and bullet lists. Do NOT use
+Markdown tables or wide layouts. Keep lines short.`;
 
 function summaryContext(summary: ChatRequest['summary']): string | null {
   if (!summary) return null;

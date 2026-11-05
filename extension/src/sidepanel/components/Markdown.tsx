@@ -27,6 +27,22 @@ const components: Components = {
   blockquote: ({ children }) => (
     <blockquote className="border-l-2 border-slate-200 pl-2 text-slate-500">{children}</blockquote>
   ),
+  table: ({ children }) => (
+    <div className="mb-2 max-w-full overflow-x-auto">
+      <table className="w-full border-collapse text-xs">{children}</table>
+    </div>
+  ),
+  thead: ({ children }) => <thead className="bg-slate-50">{children}</thead>,
+  tr: ({ children }) => <tr className="border-b border-slate-200 last:border-0">{children}</tr>,
+  th: ({ children }) => (
+    <th className="border border-slate-200 px-2 py-1 text-left align-top font-semibold">
+      {children}
+    </th>
+  ),
+  td: ({ children }) => (
+    <td className="border border-slate-200 px-2 py-1 align-top">{children}</td>
+  ),
+  hr: () => <hr className="my-2 border-slate-200" />,
 };
 
 const inlineComponents: Components = {
