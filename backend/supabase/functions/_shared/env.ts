@@ -19,3 +19,6 @@ export const EXTPAY_ID = Deno.env.get('EXTPAY_ID') ?? 'paperlens';
 
 // Lemon Squeezy (Merchant of Record) webhook signing secret.
 export const LEMONSQUEEZY_WEBHOOK_SECRET = Deno.env.get('LEMONSQUEEZY_WEBHOOK_SECRET') ?? '';
+
+// Gumroad access token - used to verify incoming webhook sales via the API.
+export const GUMROAD_ACCESS_TOKEN = Deno.env.get('GUMROAD_ACCESS_TOKEN') ?? '';
