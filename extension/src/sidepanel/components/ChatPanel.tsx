@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ChatMessage, ExtractedPaper } from '@shared/types';
+import type { ChatMessage, ExtractedPaper, PaperSummary } from '@shared/types';
 import { chatWithPaper } from '@/lib/api';
 import { MAX_CHARS } from '@/lib/config';
 import { Markdown } from './Markdown';
@@ -7,10 +7,12 @@ import { Spinner } from './Spinner';
 
 export function ChatPanel({
   paper,
+  summary,
   isPaid,
   onUpgrade,
 }: {
   paper: ExtractedPaper;
+  summary: PaperSummary | null;
   isPaid: boolean;
   onUpgrade: () => void;
 }) {
@@ -44,6 +46,7 @@ export function ChatPanel({
         paperText: paper.text.slice(0, MAX_CHARS),
         question,
         history: messages,
+        summary: summary ?? undefined,
       });
       setMessages([...next, { role: 'assistant', content: res.answer }]);
     } catch (err) {

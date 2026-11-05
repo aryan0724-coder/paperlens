@@ -42,6 +42,7 @@ export interface ChatRequest {
   paperText: string;
   question: string;
   history?: ChatMessage[];
+  summary?: PaperSummary;
 }
 
 export interface ChatResponse {

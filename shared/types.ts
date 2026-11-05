@@ -61,6 +61,8 @@ export interface ChatRequest {
   paperText: string;
   question: string;
   history?: ChatMessage[];
+  /** The structured summary already shown to the user, for follow-up consistency. */
+  summary?: PaperSummary;
 }
 
 export interface ChatResponse {

@@ -5,9 +5,24 @@ import { chatCompletion, type LLMMessage } from '../_shared/llm.ts';
 import { getUsage, isPro } from '../_shared/quota.ts';
 import type { ChatRequest, ChatResponse } from '../_shared/types.ts';
 
-const SYSTEM_PROMPT = `You are a helpful research assistant. Answer the user's questions about the paper
-using ONLY the provided paper text. If the answer isn't in the text, say so plainly. Be concise and precise,
-and cite section names or quotes when useful.`;
+const SYSTEM_PROMPT = `You are a helpful research assistant for academic papers. Use the PAPER TEXT and the
+STRUCTURED SUMMARY (if provided) to answer the user's question. Prefer facts grounded in the paper text, and you
+may build on the summary for context and follow-up questions. Be concise and precise, and cite section names or
+quotes when useful. If the specific detail asked for isn't in the provided text (for example only the abstract was
+extracted), say what is known from the abstract/summary and suggest opening the full PDF for more depth rather than
+refusing outright.`;
+
+function summaryContext(summary: ChatRequest['summary']): string | null {
+  if (!summary) return null;
+  return [
+    'STRUCTURED SUMMARY (already shown to the user):',
+    `TL;DR: ${summary.tldr}`,
+    `Key findings: ${(summary.keyFindings || []).join('; ')}`,
+    `Methods: ${summary.methods}`,
+    `Contributions: ${(summary.contributions || []).join('; ')}`,
+    `Limitations: ${summary.limitations}`,
+  ].join('\n');
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -31,9 +46,11 @@ Deno.serve(async (req) => {
     return errorResponse('Missing paper text or question.', 400, 'BAD_REQUEST');
   }
 
+  const sumCtx = summaryContext(body.summary);
   const messages: LLMMessage[] = [
     { role: 'system', content: SYSTEM_PROMPT },
     { role: 'system', content: `PAPER TEXT:\n${body.paperText}` },
+    ...(sumCtx ? [{ role: 'system', content: sumCtx } as LLMMessage] : []),
     ...(body.history ?? []).map((m) => ({ role: m.role, content: m.content } as LLMMessage)),
     { role: 'user', content: body.question },
   ];

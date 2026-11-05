@@ -133,7 +133,12 @@ export default function App() {
             {summary && paper && (
               <>
                 <SummaryView paper={paper} summary={summary} model={model} />
-                <ChatPanel paper={paper} isPaid={paid.isPaid} onUpgrade={openPaymentPage} />
+                <ChatPanel
+                  paper={paper}
+                  summary={summary}
+                  isPaid={paid.isPaid}
+                  onUpgrade={openPaymentPage}
+                />
               </>
             )}
 
