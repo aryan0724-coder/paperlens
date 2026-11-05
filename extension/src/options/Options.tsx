@@ -1,6 +1,6 @@
 import { signOut } from '@/lib/auth';
 import { openPaymentPage } from '@/lib/billing';
-import { IS_BACKEND_CONFIGURED, PRIVACY_URL, SUPPORT_EMAIL } from '@/lib/config';
+import { IS_BACKEND_CONFIGURED, IS_PAYMENTS_CONFIGURED, PRIVACY_URL, SUPPORT_EMAIL } from '@/lib/config';
 import { useSession } from '@/sidepanel/hooks/useSession';
 import { usePaidStatus } from '@/sidepanel/hooks/usePaidStatus';
 
@@ -48,7 +48,7 @@ export function Options() {
               )}
             </Row>
             <div className="mt-4 flex gap-2">
-              {!paid.isPaid && (
+              {!paid.isPaid && IS_PAYMENTS_CONFIGURED && (
                 <button className="btn btn-primary" onClick={openPaymentPage}>
                   Upgrade to Pro
                 </button>

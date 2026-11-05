@@ -2,8 +2,11 @@
 
 export const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL || '').replace(/\/$/, '');
 export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-/** Lemon Squeezy hosted checkout URL for the Pro subscription variant. */
+/** Hosted checkout URL for the Pro subscription (Lemon Squeezy / Gumroad / etc.). */
 export const LEMONSQUEEZY_CHECKOUT_URL = import.meta.env.VITE_LS_CHECKOUT_URL || '';
+
+/** When false, the UI shows "Pro coming soon" instead of a (dead) upgrade button. */
+export const IS_PAYMENTS_CONFIGURED = Boolean(LEMONSQUEEZY_CHECKOUT_URL);
 
 export const BACKEND_URL = (
   import.meta.env.VITE_BACKEND_URL || (SUPABASE_URL ? `${SUPABASE_URL}/functions/v1` : '')

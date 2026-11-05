@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import type { ChatMessage, ExtractedPaper, PaperSummary } from '@shared/types';
 import { chatWithPaper } from '@/lib/api';
-import { MAX_CHARS } from '@/lib/config';
+import { IS_PAYMENTS_CONFIGURED, MAX_CHARS } from '@/lib/config';
 import { Markdown } from './Markdown';
 import { Spinner } from './Spinner';
 
@@ -39,9 +39,13 @@ export function ChatPanel({
     return (
       <div className="card mx-4 mt-3 text-center">
         <p className="text-sm text-slate-600">Chat with this paper is a Pro feature.</p>
-        <button className="btn btn-primary mt-2" onClick={onUpgrade}>
-          Upgrade to Pro
-        </button>
+        {IS_PAYMENTS_CONFIGURED ? (
+          <button className="btn btn-primary mt-2" onClick={onUpgrade}>
+            Upgrade to Pro
+          </button>
+        ) : (
+          <p className="mt-1 text-xs text-slate-400">Coming soon.</p>
+        )}
       </div>
     );
   }

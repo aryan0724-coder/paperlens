@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { ExtractedPaper, PaperSummary, UsageInfo } from '@shared/types';
 import { ApiCallError, summarizePaper } from '@/lib/api';
 import { openPaymentPage } from '@/lib/billing';
-import { IS_BACKEND_CONFIGURED, MAX_CHARS } from '@/lib/config';
+import { IS_BACKEND_CONFIGURED, IS_PAYMENTS_CONFIGURED, MAX_CHARS } from '@/lib/config';
 import { requestActivePaper } from '@/lib/messages';
 import { AuthGate } from './components/AuthGate';
 import { ChatPanel } from './components/ChatPanel';
@@ -118,9 +118,15 @@ export default function App() {
                 <p className="text-sm text-slate-700">
                   You&apos;ve used your free summaries for this month.
                 </p>
-                <button className="btn btn-primary mt-2" onClick={openPaymentPage}>
-                  Upgrade to Pro
-                </button>
+                {IS_PAYMENTS_CONFIGURED ? (
+                  <button className="btn btn-primary mt-2" onClick={openPaymentPage}>
+                    Upgrade to Pro
+                  </button>
+                ) : (
+                  <p className="mt-1 text-xs text-slate-400">
+                    Pro (unlimited + chat) is coming soon.
+                  </p>
+                )}
               </div>
             )}
 
