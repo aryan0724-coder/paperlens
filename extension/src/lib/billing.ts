@@ -1,10 +1,8 @@
-import ExtPay from 'extpay';
-import { EXTPAY_ID } from './config';
+import { MSG } from './messages';
 
-// A single ExtPay instance per context. In the service worker we also call
-// `startBackground()` (see background/service-worker.ts). ExtPay transparently
-// coordinates between contexts via the background page.
-const extpay = ExtPay(EXTPAY_ID);
+// All ExtPay network calls happen in the background service worker (see
+// background/service-worker.ts), where host_permissions cleanly bypass CORS.
+// The UI only messages the worker - it never calls ExtPay directly.
 
 export interface PaidStatus {
   isPaid: boolean;
@@ -14,26 +12,27 @@ export interface PaidStatus {
 
 export async function getPaidStatus(): Promise<PaidStatus> {
   try {
-    const user = await extpay.getUser();
-    return {
-      isPaid: Boolean(user.paid),
-      status: user.subscriptionStatus ?? null,
-      email: user.email ?? undefined,
-    };
+    const res = await chrome.runtime.sendMessage({ type: MSG.EXTPAY_GET_USER });
+    if (res?.ok) {
+      return {
+        isPaid: Boolean(res.paid),
+        status: (res.status as PaidStatus['status']) ?? null,
+        email: res.email ?? undefined,
+      };
+    }
   } catch {
-    // ExtPay not reachable (e.g. not configured yet) -> treat as free.
-    return { isPaid: false, status: null };
+    /* worker unavailable -> treat as free */
   }
+  return { isPaid: false, status: null };
 }
 
 export function openPaymentPage(): void {
-  extpay.openPaymentPage();
+  chrome.runtime.sendMessage({ type: MSG.EXTPAY_OPEN_PAYMENT }).catch(() => {});
 }
 
+/** Fires when the worker broadcasts that a payment/login completed. */
 export function onPaid(cb: () => void): void {
-  try {
-    extpay.onPaid.addListener(() => cb());
-  } catch {
-    /* no-op if ExtPay unavailable */
-  }
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg?.type === MSG.EXTPAY_PAID) cb();
+  });
 }
