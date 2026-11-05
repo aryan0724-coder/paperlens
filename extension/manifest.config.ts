@@ -54,11 +54,6 @@ export default defineManifest({
   options_page: 'src/options/index.html',
   content_scripts: [
     {
-      matches: PAPER_HOSTS,
-      js: ['src/content/content-script.ts'],
-      run_at: 'document_idle',
-    },
-    {
       // Enables ExtPay.onPaid callbacks after a successful payment/login.
       matches: ['https://extensionpay.com/*'],
       js: ['src/content/extpay-content.ts'],

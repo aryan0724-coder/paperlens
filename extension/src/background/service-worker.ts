@@ -34,22 +34,22 @@ async function getActivePaper(): Promise<PaperResult> {
 
   if (isPdfUrl(url)) return extractPdf(url);
 
-  // Try the declared content script first; fall back to on-demand injection.
+  // Inject extraction on demand so it works on any already-open supported tab
+  // (no reliance on a pre-injected content script).
   try {
-    return (await chrome.tabs.sendMessage(tab.id, { type: MSG.EXTRACT_DOM })) as PaperResult;
+    const [res] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: extractInPage,
+      args: [url],
+    });
+    const result = res?.result as PaperResult | undefined;
+    return result ?? { ok: false, error: 'Could not read this page.' };
   } catch {
-    try {
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['src/content/content-script.ts'],
-      });
-      return (await chrome.tabs.sendMessage(tab.id, { type: MSG.EXTRACT_DOM })) as PaperResult;
-    } catch {
-      return {
-        ok: false,
-        error: 'This page type is not supported yet. Open an arXiv/PubMed/journal page or a PDF.',
-      };
-    }
+    return {
+      ok: false,
+      error:
+        'This page can\u2019t be read here. PaperLens works on arXiv, PubMed, bioRxiv, major journals, and PDFs.',
+    };
   }
 }
 
@@ -88,4 +88,109 @@ async function ensureOffscreen(): Promise<void> {
     });
   await creating;
   creating = null;
+}
+
+/**
+ * Runs in the target page (via executeScript). Must be fully self-contained:
+ * no imports or references to module-scope variables.
+ */
+function extractInPage(
+  pageUrl: string,
+): { ok: true; paper: Record<string, unknown> } | { ok: false; error: string } {
+  let host = '';
+  try {
+    host = new URL(pageUrl).host;
+  } catch {
+    host = '';
+  }
+  const source =
+    host.indexOf('arxiv.org') >= 0
+      ? 'arxiv'
+      : host.indexOf('pubmed') >= 0 || host.indexOf('ncbi.nlm.nih.gov') >= 0
+        ? 'pubmed'
+        : host.indexOf('biorxiv.org') >= 0 || host.indexOf('medrxiv.org') >= 0
+          ? 'biorxiv'
+          : 'generic';
+
+  const meta = (selectors: string[]): string => {
+    for (const s of selectors) {
+      const el = document.querySelector(s);
+      const c = el && el.getAttribute('content');
+      if (c && c.trim()) return c.trim();
+    }
+    return '';
+  };
+  const metaAll = (selector: string): string[] =>
+    Array.from(document.querySelectorAll(selector))
+      .map((el) => (el.getAttribute('content') || '').trim())
+      .filter(Boolean);
+
+  const h1 = document.querySelector('h1');
+  const title =
+    meta(['meta[name="citation_title"]', 'meta[property="og:title"]']) ||
+    (h1 && h1.textContent ? h1.textContent.trim() : '') ||
+    document.title.trim();
+
+  let authors = metaAll('meta[name="citation_author"]');
+  if (!authors.length) authors = metaAll('meta[name="dc.creator"], meta[name="DC.creator"]');
+  authors = Array.from(new Set(authors));
+
+  let abstract = meta(['meta[name="citation_abstract"]', 'meta[name="description"]']);
+  if (!abstract) {
+    const el = document.querySelector('.abstract, #abstract, blockquote.abstract');
+    abstract = el && el.textContent ? el.textContent.trim() : '';
+  }
+
+  const candidates = [
+    'article',
+    '[role="main"] article',
+    'main article',
+    '.article-body',
+    '.article__body',
+    '#article-body',
+    '.abstract-content',
+    '.c-article-body',
+    '#content-inner',
+    'main',
+    '[role="main"]',
+  ];
+  let body = '';
+  for (const sel of candidates) {
+    const el = document.querySelector(sel) as HTMLElement | null;
+    const t = el && el.innerText ? el.innerText.trim() : '';
+    if (t.length > body.length) body = t;
+  }
+  if (body.length < 400) {
+    body = document.body && document.body.innerText ? document.body.innerText.trim() : '';
+  }
+
+  const text = [abstract ? 'Abstract: ' + abstract : '', body]
+    .filter(Boolean)
+    .join('\n\n')
+    .replace(/\r/g, '')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  const wordCount = (text.match(/\S+/g) || []).length;
+  if (wordCount < 40) {
+    return {
+      ok: false,
+      error:
+        'Could not find enough article text on this page. Open the paper\u2019s abstract / full text or its PDF.',
+    };
+  }
+
+  return {
+    ok: true,
+    paper: {
+      title: title || 'Untitled',
+      authors,
+      abstract: abstract || undefined,
+      text,
+      source,
+      url: pageUrl,
+      wordCount,
+    },
+  };
 }
