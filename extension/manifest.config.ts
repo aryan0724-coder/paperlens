@@ -58,6 +58,12 @@ export default defineManifest({
       js: ['src/content/content-script.ts'],
       run_at: 'document_idle',
     },
+    {
+      // Enables ExtPay.onPaid callbacks after a successful payment/login.
+      matches: ['https://extensionpay.com/*'],
+      js: ['src/content/extpay-content.ts'],
+      run_at: 'document_start',
+    },
   ],
   permissions: ['sidePanel', 'storage', 'activeTab', 'scripting', 'offscreen', 'tabs'],
   host_permissions: PAPER_HOSTS,
