@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ExtractedPaper, PaperSummary } from '@shared/types';
 import { summaryToMarkdown, toCitation } from '@/lib/format';
+import { Markdown } from './Markdown';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -38,31 +39,35 @@ export function SummaryView({
       )}
 
       <Section title="TL;DR">
-        <p>{summary.tldr}</p>
+        <Markdown inline>{summary.tldr}</Markdown>
       </Section>
 
       <Section title="Key findings">
         <ul className="list-disc space-y-1 pl-4">
           {summary.keyFindings.map((f, i) => (
-            <li key={i}>{f}</li>
+            <li key={i}>
+              <Markdown inline>{f}</Markdown>
+            </li>
           ))}
         </ul>
       </Section>
 
       <Section title="Methods">
-        <p>{summary.methods}</p>
+        <Markdown inline>{summary.methods}</Markdown>
       </Section>
 
       <Section title="Contributions">
         <ul className="list-disc space-y-1 pl-4">
           {summary.contributions.map((c, i) => (
-            <li key={i}>{c}</li>
+            <li key={i}>
+              <Markdown inline>{c}</Markdown>
+            </li>
           ))}
         </ul>
       </Section>
 
       <Section title="Limitations">
-        <p>{summary.limitations}</p>
+        <Markdown inline>{summary.limitations}</Markdown>
       </Section>
 
       <div className="mt-4 flex items-center gap-2 border-t border-slate-100 pt-3">
