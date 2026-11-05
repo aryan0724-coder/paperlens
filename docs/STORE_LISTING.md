@@ -30,8 +30,8 @@ Productivity
 - Host permissions (arXiv/PubMed/journals): extract paper content on those sites.
 
 ## Privacy
-Single-purpose: summarize academic papers. Data use is described in docs/PRIVACY.md. A hosted
-privacy policy URL is required at submission time.
+Single-purpose: summarize academic papers. Data use is described in docs/PRIVACY.md.
+Hosted privacy policy URL: https://aryan0724-coder.github.io/paperlens/
 
 ## Assets needed before submission
 - 128x128 store icon (replace the generated placeholder in extension/public/icons).

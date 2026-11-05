@@ -14,5 +14,5 @@ export const IS_BACKEND_CONFIGURED = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 /** Hard cap on characters sent to the model (keeps latency + token cost sane). */
 export const MAX_CHARS = 48_000;
 
-export const PRIVACY_URL = 'https://paperlens.app/privacy';
+export const PRIVACY_URL = 'https://aryan0724-coder.github.io/paperlens/';
 export const SUPPORT_EMAIL = 'support@paperlens.app';
