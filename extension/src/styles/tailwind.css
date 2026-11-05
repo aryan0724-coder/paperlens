@@ -36,23 +36,30 @@ body {
   }
 }
 
-/* Stable, styled scroll areas to avoid scrollbar flicker when content height
-   changes (e.g. while the model is "thinking"). */
-.scroll-area {
-  overflow-y: auto;
-  scrollbar-gutter: stable;
+/* Force classic (non-overlay) scrollbars everywhere so they don't fade in/out
+   ("blink") as the cursor moves over a scrollable area on Windows. */
+* {
   scrollbar-width: thin;
   scrollbar-color: rgb(203 213 225) transparent;
-  overflow-anchor: none;
 }
-.scroll-area::-webkit-scrollbar {
+*::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
-.scroll-area::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-thumb {
   background-color: rgb(203 213 225);
   border-radius: 9999px;
 }
-.scroll-area::-webkit-scrollbar-track {
+*::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* Reserve scrollbar space so content doesn't shift when it appears. */
+html,
+.scroll-area {
+  scrollbar-gutter: stable;
+}
+.scroll-area {
+  overflow-y: auto;
+  overflow-anchor: none;
 }
