@@ -1,4 +1,5 @@
 import ExtPay from 'extpay';
+import type { ExtractedPaper } from '@shared/types';
 import { EXTPAY_ID } from '@/lib/config';
 import { MSG, type PaperResult } from '@/lib/messages';
 
@@ -34,11 +35,21 @@ async function getActivePaper(): Promise<PaperResult> {
 
   if (isPdfUrl(url)) return extractPdf(url);
 
-  // Inject extraction on demand so it works on any already-open supported tab
-  // (no reliance on a pre-injected content script).
+  // arXiv abstract pages only expose the abstract; pull the full-text PDF
+  // instead, enriched with the page's title/authors/abstract.
+  const arxivAbs = url.match(/arxiv\.org\/abs\/([^?#]+)/i);
+  if (arxivAbs) {
+    const full = await extractArxivFull(tab.id, url, arxivAbs[1]);
+    if (full) return full;
+  }
+
+  return extractDom(tab.id, url);
+}
+
+async function extractDom(tabId: number, url: string): Promise<PaperResult> {
   try {
     const [res] = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
+      target: { tabId },
       func: extractInPage,
       args: [url],
     });
@@ -51,6 +62,39 @@ async function getActivePaper(): Promise<PaperResult> {
         'This page can\u2019t be read here. PaperLens works on arXiv, PubMed, bioRxiv, major journals, and PDFs.',
     };
   }
+}
+
+/** For arXiv /abs/ pages: parse the full PDF, keep nice metadata from the page. */
+async function extractArxivFull(
+  tabId: number,
+  absUrl: string,
+  id: string,
+): Promise<PaperResult | null> {
+  const pdfRes = await extractPdf(`https://arxiv.org/pdf/${id}`);
+  if (!pdfRes.ok) return null; // fall back to DOM extraction
+
+  let dom: ExtractedPaper | null = null;
+  try {
+    const [res] = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: extractInPage,
+      args: [absUrl],
+    });
+    const r = res?.result as PaperResult | undefined;
+    if (r && r.ok) dom = r.paper;
+  } catch {
+    /* metadata enrichment is best-effort */
+  }
+
+  const paper = pdfRes.paper;
+  paper.url = absUrl;
+  paper.source = 'arxiv';
+  if (dom) {
+    if (dom.title) paper.title = dom.title;
+    if (dom.authors.length) paper.authors = dom.authors;
+    if (dom.abstract) paper.abstract = dom.abstract;
+  }
+  return { ok: true, paper };
 }
 
 function isPdfUrl(url: string): boolean {
