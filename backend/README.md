@@ -23,11 +23,12 @@ supabase link --project-ref <your-project-ref>
 supabase db push
 
 # 2) Set server secrets (never shipped to the client)
+#    Example uses Groq (free, OpenAI-compatible).
 supabase secrets set \
-  LLM_API_KEY=sk-... \
-  LLM_BASE_URL=https://api.openai.com/v1 \
-  LLM_MODEL_FREE=gpt-4o-mini \
-  LLM_MODEL_PRO=gpt-4o \
+  LLM_API_KEY=gsk_your_groq_key \
+  LLM_BASE_URL=https://api.groq.com/openai/v1 \
+  LLM_MODEL_FREE=openai/gpt-oss-120b \
+  LLM_MODEL_PRO=openai/gpt-oss-120b \
   FREE_MONTHLY_LIMIT=5 \
   EXTPAY_ID=paperlens
 
@@ -39,9 +40,16 @@ supabase functions deploy sync-subscription
 
 ## Auth configuration
 
-In the Supabase dashboard: Authentication -> Providers -> Email, enable **Email OTP**
-(so `signInWithOtp` sends a 6-digit code rather than only a magic link - the extension
-uses the code flow).
+The extension uses **email + password** auth (works fully inside the side panel). On the free
+tier with the default email provider, email templates can't be customized, so this project
+enables **auto-confirm** (`mailer_autoconfirm = true`) to skip the email round-trip:
+
+```bash
+# via the Management API (PAT), or the dashboard: Authentication -> Settings -> "Confirm email" off
+```
+
+For production, add a custom SMTP provider (Resend/Brevo/SendGrid) and re-enable email
+confirmation for verified sign-ups.
 
 ## Wiring the extension
 

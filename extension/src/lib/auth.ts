@@ -1,26 +1,20 @@
 import type { Session } from '@supabase/supabase-js';
 import { getSupabase } from './supabase';
 
-/** Send a one-time 6-digit login code to the user's email. */
-export async function sendOtp(email: string): Promise<void> {
+/** Sign in with email + password. */
+export async function signIn(email: string, password: string): Promise<Session | null> {
   const s = getSupabase();
   if (!s) throw new Error('Backend not configured.');
-  const { error } = await s.auth.signInWithOtp({
-    email: email.trim(),
-    options: { shouldCreateUser: true },
-  });
+  const { data, error } = await s.auth.signInWithPassword({ email: email.trim(), password });
   if (error) throw error;
+  return data.session;
 }
 
-/** Verify the emailed code and establish a session. */
-export async function verifyOtp(email: string, token: string): Promise<Session | null> {
+/** Create an account with email + password (auto-confirmed on this project). */
+export async function signUp(email: string, password: string): Promise<Session | null> {
   const s = getSupabase();
   if (!s) throw new Error('Backend not configured.');
-  const { data, error } = await s.auth.verifyOtp({
-    email: email.trim(),
-    token: token.trim(),
-    type: 'email',
-  });
+  const { data, error } = await s.auth.signUp({ email: email.trim(), password });
   if (error) throw error;
   return data.session;
 }

@@ -10,6 +10,9 @@ dist/
 # Packaged store zips
 *.zip
 
+# Local tooling (downloaded CLIs, etc.)
+.tools/
+
 # Env & secrets (NEVER commit real keys)
 .env
 .env.local
