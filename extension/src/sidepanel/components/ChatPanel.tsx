@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { ChatMessage, ExtractedPaper, PaperSummary } from '@shared/types';
 import { chatWithPaper } from '@/lib/api';
 import { MAX_CHARS } from '@/lib/config';
@@ -20,6 +20,20 @@ export function ChatPanel({
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const taRef = useRef<HTMLTextAreaElement>(null);
+
+  function autoGrow(el: HTMLTextAreaElement) {
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    // Enter sends; Shift+Enter inserts a newline.
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      void submitMessage();
+    }
+  }
 
   if (!isPaid) {
     return (
@@ -32,12 +46,12 @@ export function ChatPanel({
     );
   }
 
-  async function send(e: React.FormEvent) {
-    e.preventDefault();
+  async function submitMessage() {
     const question = input.trim();
-    if (!question) return;
+    if (!question || busy) return;
     setInput('');
     setError('');
+    if (taRef.current) taRef.current.style.height = 'auto';
     const next = [...messages, { role: 'user' as const, content: question }];
     setMessages(next);
     setBusy(true);
@@ -54,6 +68,11 @@ export function ChatPanel({
     } finally {
       setBusy(false);
     }
+  }
+
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    void submitMessage();
   }
 
   return (
@@ -82,12 +101,18 @@ export function ChatPanel({
         {busy && <Spinner label="Thinking..." />}
       </div>
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-      <form onSubmit={send} className="mt-2 flex gap-2">
-        <input
-          className="input"
-          placeholder="Ask about methods, results..."
+      <form onSubmit={onSubmit} className="mt-2 flex items-end gap-2">
+        <textarea
+          ref={taRef}
+          rows={1}
+          className="input max-h-36 resize-none leading-relaxed"
+          placeholder="Ask about methods, results...  (Shift+Enter for a new line)"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => {
+            setInput(e.target.value);
+            autoGrow(e.target);
+          }}
+          onKeyDown={handleKeyDown}
           disabled={busy}
         />
         <button className="btn btn-primary" disabled={busy || !input.trim()}>
