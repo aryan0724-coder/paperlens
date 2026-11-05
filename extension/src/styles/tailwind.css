@@ -35,3 +35,24 @@ body {
     @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
   }
 }
+
+/* Stable, styled scroll areas to avoid scrollbar flicker when content height
+   changes (e.g. while the model is "thinking"). */
+.scroll-area {
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(203 213 225) transparent;
+  overflow-anchor: none;
+}
+.scroll-area::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scroll-area::-webkit-scrollbar-thumb {
+  background-color: rgb(203 213 225);
+  border-radius: 9999px;
+}
+.scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}

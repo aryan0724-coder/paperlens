@@ -89,7 +89,7 @@ export default function App() {
         </div>
       )}
 
-      <main className="flex-1 overflow-y-auto pb-6">
+      <main className="scroll-area flex-1 pb-6">
         {configured && sessionLoading ? (
           <div className="p-4">
             <Spinner label="Loading..." />
