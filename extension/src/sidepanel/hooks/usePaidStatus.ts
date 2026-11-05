@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
-import { syncSubscription } from '@/lib/api';
-import { getPaidStatus, onPaid, type PaidStatus } from '@/lib/billing';
-import { IS_BACKEND_CONFIGURED } from '@/lib/config';
+import { getPaidStatus, type PaidStatus } from '@/lib/billing';
 
 export function usePaidStatus() {
   const [status, setStatus] = useState<PaidStatus>({ isPaid: false, status: null });
@@ -9,20 +7,23 @@ export function usePaidStatus() {
 
   useEffect(() => {
     let mounted = true;
-    const refresh = async () => {
-      const s = await getPaidStatus();
-      if (mounted) setStatus(s);
-      // Keep the backend's is_pro flag in sync with ExtPay (best effort).
-      if (s.isPaid && IS_BACKEND_CONFIGURED) {
-        syncSubscription(true, s.status).catch(() => {});
-      }
-    };
+    const refresh = () =>
+      getPaidStatus().then((s) => {
+        if (mounted) setStatus(s);
+      });
     refresh().finally(() => {
       if (mounted) setLoading(false);
     });
-    onPaid(() => refresh());
+    // The Lemon Squeezy webhook updates is_pro server-side after checkout (which
+    // happens in another tab), so re-check when the panel regains focus and on a
+    // light interval.
+    const onFocus = () => refresh();
+    window.addEventListener('focus', onFocus);
+    const id = window.setInterval(refresh, 15000);
     return () => {
       mounted = false;
+      window.removeEventListener('focus', onFocus);
+      window.clearInterval(id);
     };
   }, []);
 

@@ -1,38 +1,41 @@
-import { MSG } from './messages';
+import { LEMONSQUEEZY_CHECKOUT_URL } from './config';
+import { getSupabase } from './supabase';
 
-// All ExtPay network calls happen in the background service worker (see
-// background/service-worker.ts), where host_permissions cleanly bypass CORS.
-// The UI only messages the worker - it never calls ExtPay directly.
+// Pro status is the source of truth in the backend (`profiles.is_pro`), set by
+// the Lemon Squeezy webhook. The extension reads its own row via RLS, and opens
+// the Lemon Squeezy hosted checkout to upgrade. No Stripe/ExtPay involved.
 
 export interface PaidStatus {
   isPaid: boolean;
-  status: 'active' | 'past_due' | 'canceled' | null;
+  status: string | null;
   email?: string;
 }
 
 export async function getPaidStatus(): Promise<PaidStatus> {
-  try {
-    const res = await chrome.runtime.sendMessage({ type: MSG.EXTPAY_GET_USER });
-    if (res?.ok) {
-      return {
-        isPaid: Boolean(res.paid),
-        status: (res.status as PaidStatus['status']) ?? null,
-        email: res.email ?? undefined,
-      };
-    }
-  } catch {
-    /* worker unavailable -> treat as free */
+  const s = getSupabase();
+  if (!s) return { isPaid: false, status: null };
+  const { data } = await s.from('profiles').select('is_pro, extpay_status').maybeSingle();
+  const isPaid = Boolean(data?.is_pro);
+  return { isPaid, status: isPaid ? 'active' : null };
+}
+
+/** Opens the Lemon Squeezy checkout, tagged with the user's id + email so the
+ *  webhook can match the purchase back to this account. */
+export async function openPaymentPage(): Promise<void> {
+  if (!LEMONSQUEEZY_CHECKOUT_URL) {
+    console.warn('VITE_LS_CHECKOUT_URL not configured.');
+    return;
   }
-  return { isPaid: false, status: null };
-}
-
-export function openPaymentPage(): void {
-  chrome.runtime.sendMessage({ type: MSG.EXTPAY_OPEN_PAYMENT }).catch(() => {});
-}
-
-/** Fires when the worker broadcasts that a payment/login completed. */
-export function onPaid(cb: () => void): void {
-  chrome.runtime.onMessage.addListener((msg) => {
-    if (msg?.type === MSG.EXTPAY_PAID) cb();
-  });
+  const s = getSupabase();
+  let email: string | undefined;
+  let userId: string | undefined;
+  if (s) {
+    const { data } = await s.auth.getUser();
+    email = data.user?.email ?? undefined;
+    userId = data.user?.id;
+  }
+  const url = new URL(LEMONSQUEEZY_CHECKOUT_URL);
+  if (email) url.searchParams.set('checkout[email]', email);
+  if (userId) url.searchParams.set('checkout[custom][user_id]', userId);
+  await chrome.tabs.create({ url: url.toString() });
 }

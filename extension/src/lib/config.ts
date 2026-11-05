@@ -2,7 +2,8 @@
 
 export const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL || '').replace(/\/$/, '');
 export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-export const EXTPAY_ID = import.meta.env.VITE_EXTPAY_ID || 'paperlens';
+/** Lemon Squeezy hosted checkout URL for the Pro subscription variant. */
+export const LEMONSQUEEZY_CHECKOUT_URL = import.meta.env.VITE_LS_CHECKOUT_URL || '';
 
 export const BACKEND_URL = (
   import.meta.env.VITE_BACKEND_URL || (SUPABASE_URL ? `${SUPABASE_URL}/functions/v1` : '')

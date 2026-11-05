@@ -52,18 +52,8 @@ export default defineManifest({
     default_path: 'src/sidepanel/index.html',
   },
   options_page: 'src/options/index.html',
-  content_scripts: [
-    {
-      // Enables ExtPay.onPaid callbacks after a successful payment/login.
-      matches: ['https://extensionpay.com/*'],
-      js: ['src/content/extpay-content.ts'],
-      run_at: 'document_start',
-    },
-  ],
   permissions: ['sidePanel', 'storage', 'activeTab', 'scripting', 'offscreen', 'tabs'],
-  // extensionpay.com is included so the extension can call ExtPay's API without
-  // tripping CORS (host_permissions makes Chrome bypass CORS for these hosts).
-  host_permissions: [...PAPER_HOSTS, 'https://extensionpay.com/*'],
+  host_permissions: PAPER_HOSTS,
   web_accessible_resources: [
     {
       resources: ['src/offscreen/offscreen.html', 'assets/*'],

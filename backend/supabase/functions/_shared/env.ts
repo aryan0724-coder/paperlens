@@ -16,3 +16,6 @@ export const FREE_MONTHLY_LIMIT = Number(Deno.env.get('FREE_MONTHLY_LIMIT') ?? '
 
 export const EXTPAY_API_KEY = Deno.env.get('EXTPAY_API_KEY') ?? '';
 export const EXTPAY_ID = Deno.env.get('EXTPAY_ID') ?? 'paperlens';
+
+// Lemon Squeezy (Merchant of Record) webhook signing secret.
+export const LEMONSQUEEZY_WEBHOOK_SECRET = Deno.env.get('LEMONSQUEEZY_WEBHOOK_SECRET') ?? '';

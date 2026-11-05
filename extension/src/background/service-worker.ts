@@ -1,20 +1,5 @@
-import ExtPay from 'extpay';
 import type { ExtractedPaper } from '@shared/types';
-import { EXTPAY_ID } from '@/lib/config';
 import { MSG, type PaperResult } from '@/lib/messages';
-
-// ExtPay must run in the background to process payments / sync status.
-const extpay = ExtPay(EXTPAY_ID);
-extpay.startBackground();
-
-// Broadcast to the UI when a payment/login completes.
-try {
-  extpay.onPaid.addListener(() => {
-    chrome.runtime.sendMessage({ type: MSG.EXTPAY_PAID }).catch(() => {});
-  });
-} catch {
-  /* onPaid needs the extensionpay.com content script; ignore if unavailable */
-}
 
 // Open the side panel when the toolbar icon is clicked.
 chrome.runtime.onInstalled.addListener(() => {
@@ -24,40 +9,13 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  switch (msg?.type) {
-    case MSG.GET_ACTIVE_PAPER:
-      getActivePaper()
-        .then(sendResponse)
-        .catch((e: unknown) =>
-          sendResponse({ ok: false, error: (e as Error).message } satisfies PaperResult),
-        );
-      return true;
-    // ExtPay network calls run here (service worker) so host_permissions cleanly
-    // bypass CORS - calling them from the side panel page does not.
-    case MSG.EXTPAY_GET_USER:
-      extpay
-        .getUser()
-        .then((u) =>
-          sendResponse({
-            ok: true,
-            paid: Boolean(u.paid),
-            status: u.subscriptionStatus ?? null,
-            email: u.email ?? null,
-          }),
-        )
-        .catch((e: unknown) => sendResponse({ ok: false, error: (e as Error).message }));
-      return true;
-    case MSG.EXTPAY_OPEN_PAYMENT:
-      try {
-        extpay.openPaymentPage();
-        sendResponse({ ok: true });
-      } catch (e) {
-        sendResponse({ ok: false, error: (e as Error).message });
-      }
-      return true;
-    default:
-      return false;
-  }
+  if (msg?.type !== MSG.GET_ACTIVE_PAPER) return false;
+  getActivePaper()
+    .then(sendResponse)
+    .catch((e: unknown) =>
+      sendResponse({ ok: false, error: (e as Error).message } satisfies PaperResult),
+    );
+  return true; // async response
 });
 
 async function getActivePaper(): Promise<PaperResult> {
