@@ -31,7 +31,7 @@ Productivity
 
 ## Privacy
 Single-purpose: summarize academic papers. Data use is described in docs/PRIVACY.md.
-Hosted privacy policy URL: https://aryan0724-coder.github.io/paperlens/
+Hosted privacy policy URL: https://aryan0724-coder.github.io/paperlens/privacy/
 
 ## Assets needed before submission
 - 128x128 store icon (replace the generated placeholder in extension/public/icons).
