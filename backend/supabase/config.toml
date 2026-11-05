@@ -1,0 +1,17 @@
+# Minimal Supabase config for PaperLens edge functions.
+# Run `supabase link --project-ref <your-ref>` then `supabase db push` and
+# `supabase functions deploy`. (Run `supabase init` once if you want the full
+# generated config for local `supabase start`.)
+
+project_id = "paperlens"
+
+# We verify the user's JWT inside each function (so we can return friendly,
+# coded errors), so disable the gateway's mandatory JWT check.
+[functions.summarize]
+verify_jwt = false
+
+[functions.chat]
+verify_jwt = false
+
+[functions.sync-subscription]
+verify_jwt = false
